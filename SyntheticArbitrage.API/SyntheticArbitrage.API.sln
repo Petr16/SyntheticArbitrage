@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyntheticArbitrage.API", "SyntheticArbitrage.API\SyntheticArbitrage.API.csproj", "{ED8E10AF-9827-4AF9-9F47-94F0C8551B78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyntheticArbitrage.Infrastructure", "SyntheticArbitrage.BLL\SyntheticArbitrage.Infrastructure.csproj", "{DBBF57C2-432A-43EC-9445-DF66C6DE2B3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyntheticArbitrage.Shared", "SyntheticArbitrage.Shared\SyntheticArbitrage.Shared.csproj", "{DBB1A1B9-1499-4715-8594-FD31D0574EA3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED8E10AF-9827-4AF9-9F47-94F0C8551B78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED8E10AF-9827-4AF9-9F47-94F0C8551B78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED8E10AF-9827-4AF9-9F47-94F0C8551B78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED8E10AF-9827-4AF9-9F47-94F0C8551B78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBBF57C2-432A-43EC-9445-DF66C6DE2B3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBBF57C2-432A-43EC-9445-DF66C6DE2B3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBBF57C2-432A-43EC-9445-DF66C6DE2B3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBBF57C2-432A-43EC-9445-DF66C6DE2B3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBB1A1B9-1499-4715-8594-FD31D0574EA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBB1A1B9-1499-4715-8594-FD31D0574EA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBB1A1B9-1499-4715-8594-FD31D0574EA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBB1A1B9-1499-4715-8594-FD31D0574EA3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8CB59DD1-2B84-481F-8D17-EB5EDBD210DA}
+	EndGlobalSection
+EndGlobal
