@@ -1,0 +1,6 @@
+@SyntheticArbitrage.Consumer_HostAddress = http://localhost:5187
+
+GET {{SyntheticArbitrage.Consumer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
