@@ -45,6 +45,11 @@ public class BinanceHttpService : IBinanceHttpService
     //    return binancePriceResponse ?? new();
     //}
 
+    /// <summary>
+    /// Получаем список пар
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     public async Task<BinanceExchangeInfoResponse> GetExchangeInfo()
     {
         string requestUri = $"{FUTURES_API}/exchangeInfo";
@@ -65,6 +70,13 @@ public class BinanceHttpService : IBinanceHttpService
         return exchangeInfo ?? new();
     }
 
+    /// <summary>
+    /// Получаем актуальную цену для пары
+    /// </summary>
+    /// <param name="pair">Пара (например, BTCUSDT)</param>
+    /// <param name="isQuarter">Квартальный и би-квартальный</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     public async Task<List<BinanceTickerPriceResponse>> GetTickerPrices(string? pair, bool isQuarter = false)
     {
         BinanceExchangeInfoResponse exchangeInfo = await GetExchangeInfo();
@@ -124,12 +136,15 @@ public class BinanceHttpService : IBinanceHttpService
         return quarterPrices ?? [];
     }
 
+
+    /// <summary>
+    /// Получаем свечи для конкретной пары по символу (например, BTCUSDT_QUARTER)
+    /// </summary>
+    /// <param name="klineRequest">Входные параметры по Symbol, Interval, Limit</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     public async Task<List<BinanceKlineResponse>> GetCandlestickBySymbol(BinanceKlineRequest klineRequest)
     {
-        //string symbol = "BTCUSDT_250627"; // Квартальный фьючерс
-        //string interval = KlineIntervalEnum.OneHour.ToIntervalString();
-        //int limit = 24; // Количество свечей (например, за сутки)
-
         //string requestUri = $"https://fapi.binance.com/fapi/v1/klines?symbol={symbol}&interval={interval}&limit={limit}";
 
         string requestUri = $"{FUTURES_API}/klines?symbol={klineRequest.Symbol}"
@@ -137,15 +152,13 @@ public class BinanceHttpService : IBinanceHttpService
             +$"&limit={klineRequest.Limit}";
 
         HttpRequestMessage? request = new(HttpMethod.Get, requestUri);
-        request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Headers.Accept
+            .Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
         HttpResponseMessage response = await _httpClient.SendAsync(request);
 
         List<List<JsonElement>>? klinesObjects =
                 await response.Content.ReadFromJsonAsync<List<List<JsonElement>>>();
-
-        //List<List<string>>? klinesObjects2 =
-        //        await response.Content.ReadFromJsonAsync<List<List<string>>>();
 
         if (klinesObjects == null)
             throw new Exception($"Klines not found");

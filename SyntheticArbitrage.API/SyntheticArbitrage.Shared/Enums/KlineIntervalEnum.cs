@@ -1,5 +1,8 @@
-﻿namespace SyntheticArbitrage.Shared.Enums;
+﻿
+using Swashbuckle.AspNetCore.Annotations;
 
+namespace SyntheticArbitrage.Shared.Enums;
+[SwaggerSchema("Интервал свечей: 0(1m),1(3m),2(5m),3(15m),4(30m),5(1h),6(2h),7(4h),8(6h),9(8h),10(12h),11(1d),12(3d),13(1w),14(1M)")]
 public enum KlineIntervalEnum
 {
     OneMinute,

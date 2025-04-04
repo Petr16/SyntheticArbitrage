@@ -2,5 +2,6 @@
 
 public interface IRabbitMQProducer
 {
-    void SendMessage<T>(T message, string queueName);
+    Task SendMessageAsync<T>(T message, string queueName);
+    Task<TResponse?> SendMessageAndGetResponseAsync<TRequest, TResponse>(TRequest message, string requestQueue);
 }

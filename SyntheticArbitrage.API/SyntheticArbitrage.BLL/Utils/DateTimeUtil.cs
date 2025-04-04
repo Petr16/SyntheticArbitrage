@@ -2,15 +2,16 @@
 
 public class DateTimeUtil
 {
-    public static long GetUnixTimestampMs(DateTime dateTime)
-    {
-        return new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
-    }
+    //Пригодится, если нужно дулать выборку из Binance API по дате unixTimestamp(long)
+    //public static long GetUnixTimestampMs(DateTime dateTime)
+    //{
+    //    return new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
+    //}
 
-    public static DateTime? GetDT(long? unixTimestamp)
+    public static DateTime? GetDTFromUnix(long? unixTimestamp)
     {
         if (unixTimestamp.HasValue)
-            return DateTimeOffset.FromUnixTimeSeconds(unixTimestamp.Value).UtcDateTime;
+            return DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp.Value).UtcDateTime;
         return null;
     }
 }
