@@ -47,6 +47,8 @@ namespace SyntheticArbitrage.DAL.Migrations
 
                     b.HasKey("QuarterSymbol", "BiQuarterSymbol", "TimestampUtc", "Interval");
 
+                    b.HasIndex("QuarterSymbol", "BiQuarterSymbol");
+
                     b.ToTable("BinanceQBQDiffPrices");
                 });
 #pragma warning restore 612, 618

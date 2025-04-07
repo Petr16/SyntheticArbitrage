@@ -13,5 +13,8 @@ public class BinanceDbContext : DbContext
     {
         modelBuilder.Entity<BinanceQBQDiffPrice>()
             .HasKey(p => new { p.QuarterSymbol, p.BiQuarterSymbol, p.TimestampUtc, p.Interval });
+
+        modelBuilder.Entity<BinanceQBQDiffPrice>()
+        .HasIndex(p => new { p.QuarterSymbol, p.BiQuarterSymbol });
     }
 }

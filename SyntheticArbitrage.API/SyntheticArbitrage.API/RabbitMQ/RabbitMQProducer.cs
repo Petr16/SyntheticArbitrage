@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using SyntheticArbitrage.Shared.RabbitMQModels;
@@ -12,62 +13,64 @@ namespace SyntheticArbitrage.API.RabbitMQ;
 public class RabbitMQProducer : IRabbitMQProducer
 {
     private readonly ConnectionFactory _factory;
-    //private readonly IConnection _connection;
-    //private readonly IModel _channel;
-    //private const string QueueName = "ticker_price_request";
+    private readonly RabbitMQConfig _config;
     //https://www.rabbitmq.com/client-libraries/dotnet-api-guide
 
-    public RabbitMQProducer(IConfiguration configuration)
+    public RabbitMQProducer(/*IConfiguration configuration*/IOptions<RabbitMQConfig> configOptions)
     {
+        //_factory = new ConnectionFactory()
+        //{
+        //    HostName = configuration["RabbitMQ:HostName"],
+        //    UserName = configuration["RabbitMQ:UserName"],
+        //    Password = configuration["RabbitMQ:Password"]
+        //};
+
+        _config = configOptions.Value;
         _factory = new ConnectionFactory()
         {
-            HostName = configuration["RabbitMQ:HostName"],
-            UserName = configuration["RabbitMQ:UserName"],
-            Password = configuration["RabbitMQ:Password"]
+            HostName = _config.HostName,
+            UserName = _config.UserName,
+            Password = _config.Password,
         };
-        //_factory.Uri = new Uri("amqp://user:pass@hostName:port/vhost");
-        //var factory = new ConnectionFactory() { HostName = "localhost" }; // или другой хост
-        //_connection = await _factory.CreateConnectionAsync();
-        //_channel = _connection.CreateModel();
-        //_channel.QueueDeclare(queue: QueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
     }
 
-    public async Task SendMessageAsync<T>(T message, string queueName)
-    {
-        IConnection conn = await _factory.CreateConnectionAsync();
-        IChannel channel = await conn.CreateChannelAsync();
-        channel.QueueDeclareAsync(queueName, durable: true, exclusive: false, autoDelete: false);
-
-        var messageBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-        var properties = new BasicProperties
-        {
-            ContentType = "application/json",
-            DeliveryMode = (DeliveryModes)2, // 2 = Persistent
-            Headers = new Dictionary<string, object>
-            {
-                { "created_at", DateTime.UtcNow.ToString("o") },
-                { "source", "SyntheticArbitrage.API" }
-            }
-        };
-        await channel.BasicPublishAsync(exchange: "",
-                                        routingKey: queueName,
-                                        mandatory: true,
-                                        basicProperties: properties,
-                                        body: messageBody);
-    }
-
-    //public void SendTickerRequest(TickerPriceRequest request, string queueName)
+    //Если достаточно просто отправить в одну сторону
+    //public async Task SendMessageAsync<T>(T message, string queueName)
     //{
-    //    var message = JsonSerializer.Serialize(request);
-    //    var body = Encoding.UTF8.GetBytes(message);
+    //    IConnection conn = await _factory.CreateConnectionAsync();
+    //    IChannel channel = await conn.CreateChannelAsync();
+    //    channel.QueueDeclareAsync(queueName, durable: true, exclusive: false, autoDelete: false);
 
-    //    _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: null, body: body);
+    //    var messageBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+    //    var properties = new BasicProperties
+    //    {
+    //        ContentType = "application/json",
+    //        DeliveryMode = (DeliveryModes)2, // 2 = Persistent
+    //        Headers = new Dictionary<string, object>
+    //        {
+    //            { "created_at", DateTime.UtcNow.ToString("o") },
+    //            { "source", "SyntheticArbitrage.API" }
+    //        }
+    //    };
+    //    await channel.BasicPublishAsync(exchange: "",
+    //                                    routingKey: queueName,
+    //                                    mandatory: true,
+    //                                    basicProperties: properties,
+    //                                    body: messageBody);
     //}
 
+    /// <summary>
+    /// Отправить запрос, выполнить его консьюмером и принять от него сериализованный ответ
+    /// </summary>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="message"></param>
+    /// <param name="requestQueue"></param>
+    /// <returns></returns>
     public async Task<TResponse?> SendMessageAndGetResponseAsync<TRequest, TResponse>(TRequest message, string requestQueue)
     {
-        using var connection = await _factory.CreateConnectionAsync();
-        using var channel = await connection.CreateChannelAsync();
+        var connection = await _factory.CreateConnectionAsync();
+        var channel = await connection.CreateChannelAsync();
 
         // Создание временной очереди для ответа
         var replyQueue = await channel.QueueDeclareAsync(queue: "", exclusive: true);
@@ -79,13 +82,16 @@ public class RabbitMQProducer : IRabbitMQProducer
         // Обработчик, который будет вызван, когда придет ответ
         consumer.ReceivedAsync += async (model, ea) =>
         {
+            Console.WriteLine($"ea.BasicProperties.CorrelationId: {ea.BasicProperties.CorrelationId} == correlationId: {correlationId}");
             if (ea.BasicProperties.CorrelationId == correlationId)
             {
                 var responseJson = Encoding.UTF8.GetString(ea.Body.ToArray());
                 var response = JsonSerializer.Deserialize<TResponse>(responseJson);
-                tcs.SetResult(response!);// Возвращаем результат
+                
+                tcs.TrySetResult(response!);// сеттим результат
             }
-
+            // подтверждение вручную, если autoAck: false у BasicConsumeAsync
+            //await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);
             await Task.Yield();
         };
 
@@ -98,10 +104,7 @@ public class RabbitMQProducer : IRabbitMQProducer
                 CorrelationId = correlationId,
                 ReplyTo = replyQueue.QueueName,
                 ContentType = "application/json"
-            };//channel.CreateBasicProperties();
-        props.CorrelationId = correlationId;
-        props.ReplyTo = replyQueue.QueueName;
-        props.ContentType = "application/json";
+            };
 
         // Отправляем сообщение в очередь запроса
         var messageBodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
@@ -112,8 +115,13 @@ public class RabbitMQProducer : IRabbitMQProducer
             basicProperties: props,
             body: messageBodyBytes);
 
-        // Ожидаем результат
-        return await tcs.Task;
+        //дожидаемся ответа и закрываем соединение, иначе будет жрать память
+        TResponse? result = await tcs.Task;
+
+        await channel.CloseAsync();      // Закрываем канал
+        await connection.CloseAsync();   // Закрываем соединение
+
+        return result;
     }
 
 }

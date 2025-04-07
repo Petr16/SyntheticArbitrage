@@ -5,14 +5,13 @@ using SyntheticArbitrage.API.RabbitMQ;
 using SyntheticArbitrage.DAL;
 using SyntheticArbitrage.DAL.Entities;
 using SyntheticArbitrage.Infrastructure.Services.Http;
-using SyntheticArbitrage.Infrastructure.Utils;
-using SyntheticArbitrage.Shared.ApiModels;
 using SyntheticArbitrage.Shared.ApiModels.ExchangeInfo;
 using SyntheticArbitrage.Shared.ApiModels.Kline;
 using SyntheticArbitrage.Shared.ApiModels.Price;
 using SyntheticArbitrage.Shared.Enums;
 using SyntheticArbitrage.Shared.Model;
 using SyntheticArbitrage.Shared.RabbitMQModels;
+using System.Collections.Generic;
 
 namespace SyntheticArbitrage.API.Controllers;
 
@@ -82,15 +81,12 @@ public class BinanceController : Controller
             IsQuarter = true
         };
 
-        //await _producer.SendMessageAsync(request, "ticker_price_request");
-        List<BinanceTickerPriceResponse>? tickerPriceResponse = await _producer
-            .SendMessageAndGetResponseAsync<TickerPriceRequest, List<BinanceTickerPriceResponse>>(
-                request,
-                "ticker_price_request");
+        List<BinanceTickerPriceResponse>? tickerPriceResponse = await _producer.SendMessageAndGetResponseAsync<
+                TickerPriceRequest, List<BinanceTickerPriceResponse>>(request, "ticker_price_request");
         #endregion
 
         List<BinanceTickerPriceAM> tickerPrice = new(); 
-        if(tickerPriceResponse != null)
+        if(tickerPriceResponse != null && tickerPriceResponse.Count > 0)
             tickerPrice = _mapper.Map<List<BinanceTickerPriceAM>>(tickerPriceResponse);
 
         //дожидаемся выполнение обоих запросов
@@ -157,7 +153,7 @@ public class BinanceController : Controller
         await _dbContext.SaveChangesAsync();
 
         // Отправляем в RabbitMQ
-        await _producer.SendMessageAsync(priceDiff, "BTCUSDT_QUARTER_diff_calc_queue");
+        //await _producer.SendMessageAsync(priceDiff, "BTCUSDT_QUARTER_diff_calc_queue");
 
         return _mapper.Map<BinanceQBQDiffPriceResponseAM>(priceDiff);
     }
