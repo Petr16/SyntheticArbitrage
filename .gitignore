@@ -15,7 +15,7 @@ obj/
 *.swp
 project.lock.json
 project.assets.json
-appsettings.*.json
+#appsettings.*.json
 secrets.json
 logs/
 *.pdb
@@ -40,7 +40,7 @@ coverage/  # tests
 # 🔹 Docker
 docker-compose.override.yml
 *.dockerfile
-docker-compose*.yml
+#docker-compose*.yml
 
 # 🔹 CI/CD
 .github/
