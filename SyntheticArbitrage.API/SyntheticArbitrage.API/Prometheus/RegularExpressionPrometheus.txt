@@ -1,0 +1,8 @@
+﻿#Выражение в Prometheus, показыающее квартальные и биквартальные цены BTCUSDT.
+
+{__name__=~"btcusdt_quarter_price|btcusdt_biquarter_price", app_name="SyntheticArbitrage.API"}
+
+#К графане не подцепиться, но по сути можно вытаскивать эти метрики (btcusdt_quarter_price, btcusdt_biquarter_price)
+# и находить, например среднее значение за 15 сек
+avg_over_time(btcusdt_quarter_price{app_name="SyntheticArbitrage.API"}[15s])
+avg_over_time(btcusdt_biquarter_price{app_name="SyntheticArbitrage.API"}[15s])

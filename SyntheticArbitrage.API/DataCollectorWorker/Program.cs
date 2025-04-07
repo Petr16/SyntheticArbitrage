@@ -1,5 +1,4 @@
 using DataCollectorWorker;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 var builder = Host.CreateApplicationBuilder(args);

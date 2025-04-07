@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Prometheus;
+using SyntheticArbitrage.API.Prometheus;
 using SyntheticArbitrage.API.RabbitMQ;
 using SyntheticArbitrage.DAL;
 using SyntheticArbitrage.Infrastructure.Services.Http;
@@ -28,15 +30,15 @@ builder.Services.AddSwaggerGen(options =>
         Description = "API for calculating BTCUSDT quarters difference of prices.",
     });
     options.EnableAnnotations();
-    //XML-documentation generation
-    //var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    //options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
 // Add dbContext
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<BinanceDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+// Add HealthCheck for Prometheus
+builder.Services.AddHealthChecks();
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
@@ -45,7 +47,19 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+//Prometheus
+//https://github.com/prometheus-net/prometheus-net#static-labels
+Metrics.DefaultRegistry.SetStaticLabels(new Dictionary<string, string>
+{
+    {"app_name","SyntheticArbitrage.API"}
+});
+builder.Services.AddSingleton<IBtcUsdtPriceMetricsService,BtcUsdtPriceMetricsService>();
+
 var app = builder.Build();
+
+//for Prometheus
+app.UseHttpMetrics();
+app.MapMetrics();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

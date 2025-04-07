@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using SyntheticArbitrage.API.Prometheus;
 using SyntheticArbitrage.API.RabbitMQ;
 using SyntheticArbitrage.DAL;
 using SyntheticArbitrage.DAL.Entities;
@@ -11,7 +12,6 @@ using SyntheticArbitrage.Shared.ApiModels.Price;
 using SyntheticArbitrage.Shared.Enums;
 using SyntheticArbitrage.Shared.Model;
 using SyntheticArbitrage.Shared.RabbitMQModels;
-using System.Collections.Generic;
 
 namespace SyntheticArbitrage.API.Controllers;
 
@@ -22,16 +22,19 @@ public class BinanceController : Controller
     private readonly IRabbitMQProducer _producer;
     private BinanceDbContext _dbContext;
     private readonly IMapper _mapper;
+    private readonly IBtcUsdtPriceMetricsService _btcUsdtPriceMetricsService;
 
     public BinanceController(IBinanceHttpService binanceHttpService,
         IRabbitMQProducer producer,
         BinanceDbContext binanceDbContext,
-        IMapper mapper)
+        IMapper mapper,
+        IBtcUsdtPriceMetricsService btcUsdtPriceMetricsService)
     {
         _binanceHttpService = binanceHttpService;
         _producer = producer;
         _dbContext = binanceDbContext;
         _mapper = mapper;
+        _btcUsdtPriceMetricsService = btcUsdtPriceMetricsService;
     }
 
     /// <summary>
@@ -148,6 +151,8 @@ public class BinanceController : Controller
             TimestampUtc = DateTime.UtcNow,
             Interval = (int)intervalRequest
         };
+
+        _btcUsdtPriceMetricsService.SetPrices(qPrice.Price, bqPrice.Price);
 
         _dbContext.BinanceQBQDiffPrices.Add(priceDiff);
         await _dbContext.SaveChangesAsync();
